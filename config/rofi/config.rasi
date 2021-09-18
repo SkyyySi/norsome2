@@ -1,0 +1,185 @@
+/*
+ * Nordic for ROFI, made by SkyyySi
+ * https://github.com/skyyysi/rofi-nordic
+ */
+
+configuration {
+/*	theme:                "Nordic"; */
+	modi:                 "drun,window,ssh,file-browser,run";
+	font:                 "Source Sans Pro Semibold 16";
+	combi-modi:           "window,drun,ssh,file-browser";
+	display-drun:         "Start";
+	display-window:       "Window";
+	display-ssh:          "SSH";
+	display-run:          "Commands";
+	display-file-browser: "Files";
+	location:             0;
+	xoffset:              0;
+	yoffset:              0;
+	fullscreen:           false;
+	show-icons:           true;
+	sidebar-mode:         true;
+}
+
+* {
+	nord0:  hsla(220,   16.4%, 21.6%, 100%);
+	nord1:  hsla(221.7, 16.3%, 27.6%, 100%);
+	nord2:  hsla(220,   16.8%, 31.6%, 100%);
+	nord3:  hsla(220,   16.5%, 35.7%, 100%);
+	nord4:  hsla(218.8, 27.9%, 88%,   100%);
+	nord5:  hsla(218.2, 26.8%, 92%,   100%);
+	nord6:  hsla(217.5, 26.7%, 94.1%, 100%);
+	nord7:  hsla(178.7, 25.1%, 64.9%, 100%);
+	nord8:  hsla(193.3, 43.4%, 67.5%, 100%);
+	nord9:  hsla(210,   34%,   63.1%, 100%);
+	nord10: hsla(213.1, 32%,   52.2%, 100%);
+	nord12: hsla(354.3, 42.3%, 56.5%, 100%);
+	nord12: hsla(14.4,  50.5%, 62.7%, 100%);
+	nord13: hsla(40,    70.6%, 73.3%, 100%);
+	nord14: hsla(92.4,  27.8%, 64.7%, 100%);
+	nord15: hsla(311.1, 20.2%, 63.1%, 100%);
+
+	background:                  @nord1;
+	background-color:            @nord1;
+	normal-background:           @nord1;
+	active-background:           @nord1;
+	urgent-background:           @nord11;
+	alternate-normal-background: @nord2;
+	alternate-active-background: @nord2;
+	alternate-urgent-background: @nord11;
+	selected-normal-background:  @nord10;
+	selected-active-background:  @nord10;
+	selected-urgent-background:  @nord13;
+
+	foreground:                  @nord4;
+	foreground-color:            @nord4;
+	normal-foreground:           @nord4;
+	active-foreground:           @nord4;
+	urgent-foreground:           @nord0;
+	alternate-normal-foreground: @nord4;
+	alternate-active-foreground: @nord4;
+	alternate-urgent-foreground: @nord0;
+	selected-normal-foreground:  @nord4;
+	selected-active-foreground:  @nord4;
+	selected-urgent-foreground:  @nord0;
+
+	spacing:         2;
+	margin:          2;
+	padding:         2;
+    scrollbar:       true;
+    hide-scrollbar:  false;
+	scrollbar-width: 16;
+}
+#window {
+    background-color: @background;
+	margin:           0;
+    padding:          10;
+	border-radius:    20;
+	border:           1;
+	border-color:     @nord4;
+}
+#mainbox {
+    margin:  0;
+    border:  0;
+    padding: 0;
+}
+#message {
+    border:       2px 0px 0px ;
+    border-color: @separatorcolor;
+    padding:      1px ;
+}
+#textbox {
+    text-color: @foreground;
+}
+#listview {
+    fixed-height: 0;
+}
+#element {
+    padding:       0 10 0 10;
+    border:        1;
+    border-color:  @nord3;
+	border-radius: 999;
+}
+#element.normal.normal {
+    background-color: @normal-background;
+    text-color:       @normal-foreground;
+}
+#element.normal.urgent {
+    background-color: @urgent-background;
+    text-color:       @urgent-foreground;
+}
+#element.normal.active {
+    background-color: @active-background;
+    text-color:       @active-foreground;
+}
+#element.selected.normal {
+    background-color: @selected-normal-background;
+    text-color:       @selected-normal-foreground;
+}
+#element.selected.urgent {
+    background-color: @selected-urgent-background;
+    text-color:       @selected-urgent-foreground;
+}
+#element.selected.active {
+    background-color: @selected-active-background;
+    text-color:       @selected-active-foreground;
+}
+#element.alternate.normal {
+    background-color: @alternate-normal-background;
+    text-color:       @alternate-normal-foreground;
+}
+#element.alternate.urgent {
+    background-color: @alternate-urgent-background;
+    text-color:       @alternate-urgent-foreground;
+}
+#element.alternate.active {
+    background-color: @alternate-active-background;
+    text-color:       @alternate-active-foreground;
+}
+#mode-switcher {
+    border:       2px 0px 0px ;
+    border-color: @separatorcolor;
+}
+#button {
+	spacing:       0;
+	padding:       0;
+	text-color:    @normal-foreground;
+	border-radius: 999;
+	border:        1;
+	border-color:  #d8dee9;
+}
+#button.selected {
+    background-color: @selected-normal-background;
+    text-color:       @selected-normal-foreground;
+}
+#inputbar {
+    spacing:    0;
+    text-color: @normal-foreground;
+    padding:    1px ;
+}
+#case-indicator {
+    spacing:    0;
+    text-color: @normal-foreground;
+}
+#entry {
+    spacing:    0;
+    text-color: @normal-foreground;
+}
+#prompt {
+    spacing:    0;
+    text-color: @normal-foreground;
+}
+#inputbar {
+    children: [
+		prompt,
+		textbox-prompt-colon,
+		entry,
+		case-indicator
+	];
+}
+#textbox-prompt-colon {
+    expand:     false;
+    str:        ":";
+    margin:     0px 0.3em 0em 0em ;
+    text-color: @normal-foreground;
+}

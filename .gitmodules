@@ -1,0 +1,6 @@
+[submodule "modules/external/bling"]
+	path = modules/external/bling
+	url = https://github.com/BlingCorp/bling
+[submodule "modules/external/nice"]
+	path = modules/external/nice
+	url = https://github.com/mut-ex/awesome-wm-nice
