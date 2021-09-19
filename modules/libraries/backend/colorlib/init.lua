@@ -1,7 +1,7 @@
 -- Convert HSL (hue saturation lightness) to RGB (red green blue)
 -- Original code by John Chin-Jew/Wavalab:
 -- https://github.com/Wavalab/rgb-hsl-rgb
-local base = require('modules.libraries.base')
+local base = require('modules.libraries.backend.base')
 
 local colorlib = {}
 

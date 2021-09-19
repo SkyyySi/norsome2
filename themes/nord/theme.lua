@@ -8,7 +8,7 @@ local xresources   = require('beautiful.xresources')
 local gears        = require('gears')
 local shape        = gears.shape or require('gears.shape')
 local dpi          = xresources.apply_dpi
-local colorlib     = require('modules.libraries.colorlib')
+local colorlib     = require('modules.libraries.backend.colorlib')
 --local themes_path  = gears.filesystem.get_themes_dir()
 
 local theme = {}

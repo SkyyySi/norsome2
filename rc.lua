@@ -18,8 +18,8 @@ local hotkeys_popup = require('awful.hotkeys_popup')
 -- when client with a matching name is opened:
 require('awful.hotkeys_popup.keys')
 -- Other libraries
-local base     = require('modules.libraries.base')
-local colorlib = require('modules.libraries.colorlib')
+local base     = require('modules.libraries.backend.base')
+local colorlib = require('modules.libraries.backend.colorlib')
 
 -- Shortcut for sending notifications (primarily for debugging,
 -- you should still use the full syntax for actual use).
@@ -55,11 +55,11 @@ end)
 
 -- {{{ Variable definitions
 -- This is used later as the default terminal and editor to run.
+config_dir = gears.filesystem.get_configuration_dir()
 terminal = 'alacritty'
 editor = os.getenv('EDITOR') or 'nano'
-editor_cmd = terminal .. ' -e ' .. editor
+editor_cmd = 'code '..config_dir --terminal .. ' -e ' .. editor
 theme = 'nord'
-config_dir = gears.filesystem.get_configuration_dir()
 
 -- Themes define colours, icons, font and wallpapers.
 theme_dir = config_dir .. 'themes/' .. theme .. '/'
@@ -580,91 +580,144 @@ naughty.connect_signal('request::display', function(n)
 end)
 -- }}}
 
+-- {{{ Autostart
+local autostart = require('modules.libraries.endusers.autostart')
+
+local autostart_commands = {
+    { 'timidity', '-iA' },
+    { 'picom' },
+    { 'pasystray' },
+    { 'xscreensaver', '-no-splash' },
+    { 'unclutter', '-b' },
+    { 'blueman-applet' },
+    { 'lxsession', '--session=awesome', '--de=awesome' },
+    { 'ulauncher', '--hide-window' },
+}
+
+autostart {
+	commands = autostart_commands,
+	rerun   = true,
+	timeout = 5,
+}
+-- }}}
+
 -- Enable sloppy focus, so that focus follows mouse.
 client.connect_signal('mouse::enter', function(c)
 	c:activate { context = 'mouse_enter', raise = false }
 end)
 
--- This function will run a table with awful.spawn, but only if it is not already running.
--- Addionally, if strict is true, it will only check if the exact process
--- passed is running insead of searching for matches in a way like:
--- `echo 'this is some string i think' | grep 'some string'` <-- will return success (0).
--- You should use that option if you, for example, only want to kill sh but not bash/zsh/fish/etc.
-function smart_run_cmd(arg)
-	-- Provide default arguments (except for command, which has to be passed).
-	local argv = {
-		command       = arg.command,                -- The command you want to run.
-		strict        = arg.strict        or false, -- If true, it will only be checked for the exact command (see above).
-		with_shell    = arg.with_shell    or false, -- Whether to use awful.spawn.with_shell or awful.spawn.
-		verbose       = arg.verbose       or false, -- If true, verbose information will be printed through notifications (useful for debugging).
-		rerun         = arg.rerun         or false, -- If true, awesome will continuously check if the command is still running and re-run it if it isn't.
-		rerun_timeout = arg.rerun_timeout or 5,     -- The amount of seconds awesome should wait between each check.
-	}
+-------------------------------------------------------------------------------------
+--[[
+local wallpaper_box = {}
 
-	-- Raise an error if the type of argv.command is a missmatch with argv.with_shell
-	if argv.with_shell and type(argv.command) == 'table' then
-		raise_error {
-			 message = '"awful.spawn.with_shell" requires a string.\nEither pass a string-formatted command or\nset "with_shell" to false to run without a shell\n(thus allowing for a table-formatted command).',
+wallpaper_box.wibox = wibox {
+	bg      = beautiful.nord2..'80',
+	width   = 650,
+	height  = 800,
+	ontop   = true,
+	visible = true,
+	shape   = gears.shape.rounded_rect,
+}
+awful.placement.centered(wallpaper_box.wibox)
+
+wallpaper_box.scrollbar = wibox.widget {
+	{
+		{
+			{
+				{
+					bar_shape           = gears.shape.rounded_bar,
+					bar_height          = 10,
+					bar_color           = beautiful.nord3,
+					handle_color        = beautiful.nord6,
+					handle_shape        = gears.shape.circle,
+					handle_border_color = beautiful.nord6,
+					handle_border_width = 1,
+					value               = 0,
+					minimum             = 0,
+					maximum             = wallpaper_box.wibox.height - 20,
+					forced_height       = 32,
+					forced_width        = 780,
+					widget              = wibox.widget.slider,
+				},
+				layout = wibox.layout.fixed.horizontal,
+			},
+			left = 10,
+			layout = wibox.layout.margin,
+		},
+		direction = 'west',
+		widget    = wibox.container.rotate
+	},
+	layout = wibox.layout.fixed.horizontal,
+}
+
+wallpaper_box.grid = wibox.widget {
+	homogeneous     = false,
+	spacing         = 10,
+	min_cols_size   = 100,
+	min_rows_size   = 100,
+	forced_num_cols = 2,
+	layout          = wibox.layout.grid
+}
+
+wallpaper_box.grid_widget = wibox.widget {
+	{
+		--{
+			widget = wallpaper_box.grid,
+		--},
+		step_function = wibox.container.scroll.step_functions.linear_back_and_forth,
+		speed         = 100,
+		layout        = wibox.container.scroll.vertical,
+	},
+	margins = 10,
+	widget  = wibox.container.margin,
+}
+
+wallpaper_box.wibox.widget = wibox.widget {
+	nil,
+	wallpaper_box.grid,
+	wallpaper_box.scrollbar,
+	layout = wibox.layout.align.horizontal,
+}
+
+function wallpaper_box.add_wallpaper(path)
+	wallpaper_box.grid:add(
+		{
+			{
+				--{
+					{
+						wibox.widget {
+							clip_shape          = gears.shape.rounded_rect,
+							resize              = true,
+							image               = path,
+							forced_width        = 290,
+							forced_heigth       = 300,
+							vertical_fit_policy = 'fit',
+							valign              = 'top',
+							widget              = wibox.widget.imagebox,
+						},
+						layout = wibox.layout.fixed.vertical,
+					},
+					layout = wibox.layout.fixed.horizontal,
+				--},
+				--widget = wibox.container.place,
+			},
+			bg     = '#000000',
+			widget = wibox.container.background,
 		}
-
-		return
-	end
-
-	if (not argv.with_shell) and type(argv.command) == 'string' then
-		raise_error {
-			 message = '"awful.spawn" requires a table.\nEither pass a table-formatted command or\nset "with_shell" to true to run with a shell\n(thus allowing for a string-formatted command).',
-		}
-
-		return
-	end
-
-	-- Turn the command table into a string to be checked with `pgrep` below.
-	local cmd_string = ''
-	if type(argv.command) == 'table' then
-		for i,v in pairs(argv.command) do
-			if i == 1 then
-				cmd_string = cmd_string .. v
-			else
-				cmd_string = cmd_string .. ' ' .. v
-			end
-		end
-	else
-		cmd_string = argv.command
-	end
-
-	if argv.strict then
-		cmd_string = [[\<]] .. cmd_string .. [[\>]]
-	end
-
-
-	awful.spawn.easy_async({ 'pgrep', '-fU', os.getenv('USER'), '--', cmd_string }, function(_,_,_,exit_code)
-		-- If the `pgrep`-command above returns zero as its exit code, it means that the process is already running.
-		-- In that case, tell the user if verbose mode is active and return.
-		if exit_code == 0 then
-			if argv.verbose then
-				naughty.notification { message = 'Nothing was executed because "' .. argv.command[1] .. '" appears to be already running!'}
-			end
-
-			return
-		end
-
-		if argv.with_shell then
-			awful.spawn.with_shell(argv.command)
-		else
-			awful.spawn(argv.command)
-		end
-
-		if argv.verbose then
-			naughty.notification { message = 'cmd_string:\n' .. cmd_string }
-			naughty.notification { message = 'cmd (table):\n' .. base.untable(argv.command) }
-			naughty.notification { message = 'Spawned "' .. argv.command[1] .. '"!'}
-		end
-	end)
+	)
 end
 
-smart_run_cmd {
-	command    = { 'picom', '--config', config_dir..'config/picom/picom.conf' },
-	strict     = false,
-	with_shell = false,
-	verbose    = false,
-}
+--wallpaper_box.add_wallpaper('/usr/share/backgrounds/wallpapers/wallpapers/charlotte_day.jpg')
+--wallpaper_box.add_wallpaper('/usr/share/backgrounds/wallpapers/wallpapers/charlotte_dusk.jpg')
+--wallpaper_box.add_wallpaper('/usr/share/backgrounds/wallpapers/wallpapers/charlotte_night.jpg')
+--wallpaper_box.add_wallpaper('/usr/share/backgrounds/wallpapers/wallpapers/col_de_Jaman.jpg')
+--wallpaper_box.add_wallpaper('/usr/share/backgrounds/wallpapers/wallpapers/default_mountains.jpg')
+--wallpaper_box.add_wallpaper('/usr/share/backgrounds/wallpapers/wallpapers/lake_mountain_sky.jpg')
+--wallpaper_box.add_wallpaper('/usr/share/backgrounds/wallpapers/wallpapers/madrid_tunnel.jpg')
+--wallpaper_box.add_wallpaper('/usr/share/backgrounds/wallpapers/wallpapers/philadelphia.jpg')
+
+base.list_wallpapers(function(wallpaper)
+	--notify(wallpaper)
+	wallpaper_box.add_wallpaper(wallpaper)
+end)
+--]]
