@@ -3,9 +3,9 @@
 -- https://github.com/Wavalab/rgb-hsl-rgb
 local base = require('modules.libraries.backend.base')
 
-local colorlib = {}
+local colors = {}
 
-function colorlib.hsl2hex(h, s, l, a)
+function colors.hsl2hex(h, s, l, a)
 	a = a or 100
 	local r, g, b
 
@@ -56,4 +56,4 @@ function colorlib.hsl2hex(h, s, l, a)
 	return tostring('#'..out)
 end
 
-return colorlib
+return colors

@@ -18,8 +18,7 @@ local hotkeys_popup = require('awful.hotkeys_popup')
 -- when client with a matching name is opened:
 require('awful.hotkeys_popup.keys')
 -- Other libraries
-local base     = require('modules.libraries.backend.base')
-local colorlib = require('modules.libraries.backend.colorlib')
+local base = require('modules.libraries.backend.base')
 
 -- Shortcut for sending notifications (primarily for debugging,
 -- you should still use the full syntax for actual use).
