@@ -17,7 +17,7 @@ Or if you just like having predictable code.
 
 Possible parameters:
 
- - `command` (table OR string): The command you want to run.
+ - `command` (table|string): The command you want to run.
  - `strict` (boolean: false): If true, it will only be checked for the exact command (see above).
  - `with_shell` (boolean: false): Whether to use awful.spawn.with_shell or awful.spawn.
  - `rerun` (boolean: false): If true, awesome will continuously check if the command is still running and re-run it if it isn't.

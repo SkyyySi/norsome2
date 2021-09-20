@@ -3,7 +3,9 @@
 		"tag",
 		"awesome",
 		"screen",
-		"client"
+		"client",
+		"mouse",
+		"beautiful"
 	],
 	"Lua.diagnostics.disable": [
 		"lowercase-global"

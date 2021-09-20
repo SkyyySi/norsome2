@@ -231,16 +231,16 @@ theme.layout_cornerse   = theme_dir .. 'layouts/cornersew.png'
 theme.icon = {}
 
 --- ICONS ---
---theme.awesome_icon = theme_dir .. 'qrlinux/QRLinux-logo.svg' -- main logo
-theme.awesome_icon    = theme_dir .. 'qrlinux/QRLinux-logo-nobg.svg' -- main logo
-theme.icon.power      = theme_dir .. 'qrlinux/power-button.svg' -- power (off) button
-theme.icon.app        = theme_dir .. 'qrlinux/generic-app.svg' -- symbol of a generic app
-theme.icon.terminal   = theme_dir .. 'qrlinux/terminal.svg'
-theme.icon.folder     = theme_dir .. 'qrlinux/folder.svg'
-theme.icon.web        = theme_dir .. 'qrlinux/web.svg'
-theme.icon.note       = theme_dir .. 'qrlinux/musical-note.svg'
-theme.icon.night_mode = theme_dir .. 'qrlinux/moon.svg'
-theme.icon.microphone = theme_dir .. 'qrlinux/microphone.svg'
+--theme.awesome_icon = theme_dir .. 'system/QRLinux-logo.svg' -- main logo
+theme.awesome_icon    = theme_dir .. 'system/system.svg' -- main logo
+theme.icon.power      = theme_dir .. 'system/power.svg' -- power (off) button
+theme.icon.app        = theme_dir .. 'system/generic-app.svg' -- symbol of a generic app
+theme.icon.terminal   = theme_dir .. 'system/terminal.svg'
+theme.icon.folder     = theme_dir .. 'system/folder.svg'
+theme.icon.web        = theme_dir .. 'system/web.svg'
+theme.icon.note       = theme_dir .. 'system/musical-note.svg'
+theme.icon.night_mode = theme_dir .. 'system/moon.svg'
+theme.icon.microphone = theme_dir .. 'system/microphone.svg'
 
 -- Define the icon theme for application icons. If not set then the icons
 -- from /usr/share/icons and /usr/share/icons/hicolor will be used.

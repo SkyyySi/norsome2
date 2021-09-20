@@ -8,6 +8,19 @@ Documentaion should be simple and consise, but still tell you all there is to kn
 
 <br />
 
+## Generel
+
+In general, you should try to use markup syntax rather than HTML syntax.
+Besides that:
+
+ - use Atx-style headers instead of Setext-style headers:
+
+```Markdown
+# This is a title
+```
+
+<br />
+
 ## Structure
 
 > ### Note(s):
@@ -15,8 +28,20 @@ Documentaion should be simple and consise, but still tell you all there is to kn
 
 Generally, a document should be structured like this:
 
- - top header (h1): `# Title`
- - if needed, a notes section
+ - top header (h1):
+ 
+ ```Markdown
+ # Title
+ ```
+ 
+ - if needed, a notes section: 
+ 
+ ```Markdown
+ > Note(s):
+ > - This is a note.
+ > - This, too, is a note.
+ ```
+ 
  - a `---` seperator 
  - a license and copyright section (please use the [CC0](https://creativecommons.org/publicdomain/zero/1.0/) license if you want to contribute)
 

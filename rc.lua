@@ -18,7 +18,9 @@ local hotkeys_popup = require('awful.hotkeys_popup')
 -- when client with a matching name is opened:
 require('awful.hotkeys_popup.keys')
 -- Other libraries
-local base = require('modules.libraries.backend.base')
+local xresources    = require('beautiful.xresources')
+local dpi           = xresources.apply_dpi
+local base          = require('modules.libraries.backend.base')
 
 -- Shortcut for sending notifications (primarily for debugging,
 -- you should still use the full syntax for actual use).
@@ -56,13 +58,14 @@ end)
 -- This is used later as the default terminal and editor to run.
 config_dir = gears.filesystem.get_configuration_dir()
 terminal = 'alacritty'
-editor = os.getenv('EDITOR') or 'nano'
-editor_cmd = 'code '..config_dir --terminal .. ' -e ' .. editor
+editor = 'code' -- os.getenv('EDITOR') or 'nano'
+editor_cmd = editor .. ' ' .. config_dir --terminal .. ' -e ' .. editor
 theme = 'nord'
 
 -- Themes define colours, icons, font and wallpapers.
 theme_dir = config_dir .. 'themes/' .. theme .. '/'
-beautiful.init(theme_dir .. 'theme.lua')
+theme_file = theme_dir .. 'theme.lua'
+beautiful.init(theme_file)
 
 -- Default modkey.
 -- Usually, Mod4 is the key with a logo between Control and Alt.
@@ -73,6 +76,9 @@ modkey = 'Mod4'
 -- }}}
 
 -- {{{ Menu
+--local awesome_menu = require('modules.widgets.awesome_menu')
+
+--[ [
 -- Create a launcher widget and a main menu
 myawesomemenu = {
    { 'hotkeys', function() hotkeys_popup.show_help(nil, awful.screen.focused()) end },
@@ -89,6 +95,7 @@ mymainmenu = awful.menu({ items = { { 'awesome', myawesomemenu, beautiful.awesom
 
 mylauncher = awful.widget.launcher({ image = beautiful.awesome_icon,
 									 menu = mymainmenu })
+--]]
 
 -- Menubar configuration
 menubar.utils.terminal = terminal -- Set the terminal for applications that require it
@@ -229,6 +236,90 @@ awful.mouse.append_global_mousebindings({
 })
 -- }}}
 
+
+local buttonify = require('modules.libraries.end-user.buttonify')
+
+local exit_popup = {}
+
+function exit_popup.button(arg)
+	if not arg then arg = {} end
+	local argv = {
+		text     = arg.text     or 'Button',
+		image    = arg.image    or beautiful.awesome_icon,
+		image_bg = arg.image_bg or beautiful.button_normal or '#3B4252',
+		bg       = arg.bg       or beautiful.bg_normal     or '#2E3440',
+		callback = arg.callback or nil
+	}
+
+	local imagebox = wibox.widget {
+		{
+			{
+				image                 = argv.image,
+				resize                = true,
+				halign                = 'center',
+				valign                = 'center',
+				forced_width          = 100,
+				horizontal_fit_policy = 'filter',
+				vertical_fit_policy   = 'filter',
+				widget                = wibox.widget.imagebox,
+			},
+			margins = 10,
+			widget  = wibox.container.margin,
+		},
+		bg     = argv.image_bg,
+		shape  = gears.shape.rounded_rect,
+		widget = wibox.container.background,
+	}
+
+	buttonify {
+		widget                  = imagebox,
+		button_callback_release = argv.callback
+	}
+
+	local widget = wibox.widget {
+			{
+				{
+					{
+						widget = imagebox
+					},
+					{
+						font   = 'Source Code Pro Bold 14',
+						text   = argv.text,
+						align  = 'center',
+						widget = wibox.widget.textbox
+					},
+					layout = wibox.layout.fixed.vertical,
+				},
+				bg     = argv.bg,
+				shape  = gears.shape.rounded_rect,
+				shape_border_width = 2,
+				shape_border_color = beautiful.nord4,
+				widget = wibox.container.background,
+			},
+			widget        = wibox.container.constraint,
+			forced_height = dpi(150),
+	}
+
+	return widget
+end
+
+exit_popup.popup = awful.popup {
+	widget    = exit_popup.button {
+		text     = 'Logout',
+		image    = beautiful.icon.power,
+		callback = function()
+			exit_popup.popup.visible = false
+			awesome.quit()
+		end
+	},
+	bg        = gears.color.transparent,
+	screen    = mouse.screen,
+	placement = awful.placement.centered,
+	shape     = gears.shape.rounded_rect,
+	visible   = false,
+	ontop     = true,
+}
+
 -- {{{ Key bindings
 
 -- General Awesome keys
@@ -239,7 +330,12 @@ awful.keyboard.append_global_keybindings({
 			  {description = 'show main menu', group = 'awesome'}),
 	awful.key({ modkey, 'Control' }, 'r', awesome.restart,
 			  {description = 'reload awesome', group = 'awesome'}),
-	awful.key({ modkey, 'Shift'   }, 'q', awesome.quit,
+	--awful.key({ modkey, 'Shift'   }, 'q', awesome.quit,
+	--		  {description = 'quit awesome', group = 'awesome'}),
+	awful.key({ modkey, 'Shift'   }, 'q', function()
+		exit_popup.popup.screen  = mouse.screen
+		exit_popup.popup.visible = not exit_popup.popup.visible
+	end,
 			  {description = 'quit awesome', group = 'awesome'}),
 	awful.key({ modkey }, 'x',
 			  function ()
@@ -502,6 +598,21 @@ ruled.client.connect_signal('request::rules', function()
 		properties = { floating = true }
 	}
 
+	-- Launchers
+	ruled.client.append_rule {
+		id         = 'launcher',
+		rule_any   = {
+			class = {
+				'ulauncher',
+				'dmenu',
+			}
+		},
+		properties = {
+			floating = true,
+			border = 0,
+		}
+	}
+
 	--[[
 	-- Add titlebars to normal clients and dialogs
 	ruled.client.append_rule {
@@ -580,7 +691,7 @@ end)
 -- }}}
 
 -- {{{ Autostart
-local autostart = require('modules.libraries.endusers.autostart')
+local autostart = require('modules.libraries.end-user.autostart')
 
 local autostart_commands = {
     { 'timidity', '-iA' },
@@ -606,6 +717,143 @@ client.connect_signal('mouse::enter', function(c)
 end)
 
 -------------------------------------------------------------------------------------
+
+local easing = require('modules.libraries.backend.easing')
+
+local test_box1 = {}
+test_box1.wibox = wibox {
+	bg      = '#FFFFFF80',
+	width   = 50,
+	height  = 50,
+	ontop   = true,
+	visible = true,
+}
+awful.placement.top(test_box1.wibox)
+
+local test_box2 = {}
+test_box2.wibox = wibox {
+	bg      = '#FFFFFF80',
+	width   = 50,
+	height  = 50,
+	ontop   = true,
+	visible = true,
+}
+awful.placement.top(test_box2.wibox, { margins = { left = 200 } })
+
+
+
+local animate = {
+	range = 0
+}
+
+function animate.move(arg)
+	local argv = {
+		fps      = arg.fps    or 60,
+		--start    = arg.start or 0,
+		stop     = arg.stop   or 1080,
+		speed    = arg.speed  or 10,
+		easing   = arg.easing or easing.easeInOutCubic,
+		callback = arg.callback, -- Needs to be defined, because it's just a resource waste otherwise.
+	}
+
+	if animate.range >= 1 then
+		animate.timer:stop()
+	end
+
+	local delta = argv.stop / argv.speed
+
+	animate.range = animate.range + 1 / delta
+
+	arg.callback(argv.easing(animate.range) * delta * argv.speed)
+end
+
+function animate.animate(arg)
+	local argv = {
+		fps      = arg.fps    or 60,
+		--start    = arg.start or 0,
+		stop     = arg.stop   or 1080,
+		speed    = arg.speed  or 10,
+		easing   = arg.easing or easing.easeInOutCubic,
+		callback = arg.callback, -- Needs to be defined, because it's just a resource waste otherwise.
+	}
+
+	local delta_time_speed = argv.speed * (60 / argv.fps) -- At 60 FPS, the speed will be taken as is.
+
+	animate.timer = gears.timer {
+		timeout = (1 / argv.fps),
+		--autostart = true,
+		callback = function()
+			animate.move {
+				stop     = argv.stop,
+				speed    = delta_time_speed,
+				easing   = argv.easing,
+				callback = argv.callback,
+			}
+		end
+	}
+end
+
+function animate:start()
+	self.timer:start()
+end
+
+function animate:stop()
+	self.timer:stop()
+end
+
+function animate:reset()
+	self.range = 0
+end
+
+--[[ function animate.animate:restart()
+	self.anim.timer:stop()
+	self.anim.timer:start()
+end ]]
+
+local foo = animate
+foo.animate {
+	fps      = 60,
+	stop     = 108,
+	speed    = 1,
+	easing   = easing.easeInOutCubic,
+	callback = function(y)
+		test_box1.wibox.y = y
+	end,
+}
+
+--[[ local bar = animate.animate {
+	fps      = 30,
+	stop     = 108,
+	speed    = 1,
+	easing   = easing.easeInOutCubic,
+	callback = function(y)
+		test_box2.wibox.y = y
+	end,
+} ]]
+
+local temp = false
+gears.timer {
+	timeout = 1,
+	autostart = true,
+	callback = function()
+		temp = not temp
+
+		if temp then
+			foo:start()
+			--bar:start()
+			return
+		end
+	end
+}
+
+test_box1.wibox:connect_signal('button::press', function(_,_,_,b)
+	if b == 1 then
+		animate:stop()
+		animate:reset()
+		animate:start()
+	end
+end)
+
 --[[
 local wallpaper_box = {}
 
