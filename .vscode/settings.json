@@ -9,5 +9,9 @@
 	],
 	"Lua.diagnostics.disable": [
 		"lowercase-global"
-	]
+	],
+	"[markdown]": {
+		"editor.wordWrap": "off"
+	}
+	
 }

@@ -1,11 +1,11 @@
 #!/usr/bin/env lua
 local gears         = require('gears')
 local awful         = require('awful')
-local xdg_menu      = require('archmenu')
-local hotkeys_popup = require('hotkeys_popup')
+local xdg_menu      = require('modules.external.archmenu')
+local hotkeys_popup = require('awful.hotkeys_popup')
 
 -- Generate an xdg app menu
-awful.spawn.with_shell('xdg_menu --format awesome --root-menu /etc/xdg/menus/arch-applications.menu > ' .. config_dir .. '/archmenu.lua')
+--awful.spawn.with_shell('xdg_menu --format awesome --root-menu /etc/xdg/menus/arch-applications.menu > ' .. config_dir .. '/archmenu.lua')
 
 -- Create a launcher widget and a main menu.
 -- Entries related to awesome itself
@@ -30,7 +30,7 @@ local menu_power = {
 local awesome_menu = awful.menu {
 	{ 'Awesome',      menu_awesome, beautiful.awesome_icon  },
 	{ 'Power',        menu_power,   beautiful.icon.power    },
-	{ 'Applications', xdgmenu,      beautiful.icon.app      },
+	{ 'Applications', xdg_menu,     beautiful.icon.app      },
 	{ 'Terminal',     terminal,     beautiful.icon.terminal },
 	{ 'File manager', filemanager,  beautiful.icon.folder   },
 	{ 'Web browser',  webbrowser,   beautiful.icon.web      },

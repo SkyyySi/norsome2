@@ -4,18 +4,18 @@ beautiful.init(theme_file)
 
 --[[ A small helper module that adds hover and click effects
 to a widget, to make it "feel" more like a button. --]]
-local function buttonify(args)
+local function buttonify(arg)
 	local argv = {
-		widget                  = args.widget                  or nil,
-		button_color_enter      = args.button_color_enter      or beautiful.button_enter,
-		button_color_leave      = args.button_color_leave      or beautiful.button_normal,
-		button_color_press      = args.button_color_press      or beautiful.button_press,
-		button_color_release    = args.button_color_release    or beautiful.button_release,
+		widget                  = arg.widget,
+		button_color_enter      = arg.button_color_enter      or beautiful.button_enter,
+		button_color_leave      = arg.button_color_leave      or beautiful.button_normal,
+		button_color_press      = arg.button_color_press      or beautiful.button_press,
+		button_color_release    = arg.button_color_release    or beautiful.button_release,
 		-- Callbacks are functions that will be executed whenever the corresponding action is performed.
-		button_callback_enter   = args.button_callback_enter   or nil,
-		button_callback_leave   = args.button_callback_normal  or nil,
-		button_callback_press   = args.button_callback_press   or nil,
-		button_callback_release = args.button_callback_release or nil,
+		button_callback_enter   = arg.button_callback_enter   or nil,
+		button_callback_leave   = arg.button_callback_normal  or nil,
+		button_callback_press   = arg.button_callback_press   or nil,
+		button_callback_release = arg.button_callback_release or nil,
 	}
 
 	local old_cursor, old_wibox

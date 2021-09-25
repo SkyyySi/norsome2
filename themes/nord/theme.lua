@@ -55,7 +55,7 @@ theme.titlebar_bg_normal = theme.nord1 or '#353C4A'
 theme.titlebar_size      = dpi(28)
 theme.titlebar_radius    = dpi(20)
 theme.useless_gap        = dpi(2)
-theme.border_width       = dpi(2)
+theme.border_width       = dpi(0)
 theme.border_normal      = theme.nord3
 theme.border_focus       = theme.nord4
 theme.border_marked      = theme.nord4
@@ -89,11 +89,15 @@ theme.bar_bg = theme.nord1--hsl(220, 16.4, 21.6, 90) or theme.nord0 .. 'E0'
     stops = { { 0, theme.nord0 }, { 1, theme.nord3 } }
 } --]]
 
-theme.qrwidget_bg                 = theme.nord0
-theme.qrwidget_panel_bg           = theme.nord1
-theme.qrwidget_shape              = function(cr,w,h) shape.rounded_rect(cr,w,h,dpi(20)) end
-theme.qrwidget_shape_border_width = dpi(1)
-theme.qrwidget_shape_border_color = theme.nord4
+theme.widget_bg                         = theme.nord0
+theme.widget_panel_bg                   = theme.nord1
+theme.widget_shape                      = function(cr,w,h) shape.rounded_rect(cr,w,h,dpi(20)) end
+theme.widget_shape_border_width         = dpi(1)
+theme.widget_shape_border_color         = theme.nord4
+theme.widget_slider_bar_color           = theme.nord10
+theme.widget_slider_handle_color        = theme.nord7
+theme.widget_slider_bar_border_color    = theme.nord10
+theme.widget_slider_handle_border_color = theme.nord7
 
 theme.control_panel_bg = theme.nord1 .. 'CC'
 theme.control_panel_fg = theme.nord4

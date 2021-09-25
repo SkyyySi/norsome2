@@ -8,7 +8,7 @@ local gears         = require('gears')
 local awful         = require('awful')
 require('awful.autofocus')
 local wibox         = require('wibox') -- Widget and layout library
-local beautiful     = require('beautiful') -- Theme handling library
+beautiful           = require('beautiful') -- Theme handling library
 local naughty       = require('naughty') -- Notification library
 -- Declarative object management
 local ruled         = require('ruled')
@@ -18,9 +18,21 @@ local hotkeys_popup = require('awful.hotkeys_popup')
 -- when client with a matching name is opened:
 require('awful.hotkeys_popup.keys')
 -- Other libraries
+local base          = require('modules.libraries.backend.base')
+local easing        = require('modules.libraries.backend.easing')
+local animate       = require('modules.libraries.backend.animate')
+local buttonify     = require('modules.libraries.end-user.buttonify')
+local smart_run_cmd = require('modules.libraries.backend.smart_run_cmd')
 local xresources    = require('beautiful.xresources')
 local dpi           = xresources.apply_dpi
-local base          = require('modules.libraries.backend.base')
+
+awful.spawn.with_shell('echo "" > /tmp/awt.txt')
+awful.spawn.with_shell('echo "'..type(gears)..'" >> /tmp/awt.txt')
+awful.spawn.with_shell('echo "'..type(awful)..'" >> /tmp/awt.txt')
+awful.spawn.with_shell('echo "'..type(wibox)..'" >> /tmp/awt.txt')
+awful.spawn.with_shell('echo "'..type(naughty)..'" >> /tmp/awt.txt')
+awful.spawn.with_shell('echo "'..type(ruled)..'" >> /tmp/awt.txt')
+awful.spawn.with_shell('echo "'..tostring(package.path)..'" >> /tmp/awt.txt')
 
 -- Shortcut for sending notifications (primarily for debugging,
 -- you should still use the full syntax for actual use).
@@ -56,11 +68,13 @@ end)
 
 -- {{{ Variable definitions
 -- This is used later as the default terminal and editor to run.
-config_dir = gears.filesystem.get_configuration_dir()
-terminal = 'alacritty'
-editor = 'code' -- os.getenv('EDITOR') or 'nano'
-editor_cmd = editor .. ' ' .. config_dir --terminal .. ' -e ' .. editor
-theme = 'nord'
+config_dir  = gears.filesystem.get_configuration_dir()
+terminal    = 'alacritty'
+editor      = 'code' -- os.getenv('EDITOR') or 'nano'
+filemanager = 'pcmanfm-qt'
+webbrowser  = 'firefox'
+editor_cmd  = editor .. ' ' .. config_dir --terminal .. ' -e ' .. editor
+theme       = 'nord'
 
 -- Themes define colours, icons, font and wallpapers.
 theme_dir = config_dir .. 'themes/' .. theme .. '/'
@@ -75,27 +89,329 @@ beautiful.init(theme_file)
 modkey = 'Mod4'
 -- }}}
 
--- {{{ Menu
---local awesome_menu = require('modules.widgets.awesome_menu')
-
---[ [
--- Create a launcher widget and a main menu
-myawesomemenu = {
-   { 'hotkeys', function() hotkeys_popup.show_help(nil, awful.screen.focused()) end },
-   { 'manual', terminal .. ' -e man awesome' },
-   { 'edit config', editor_cmd .. ' ' .. awesome.conffile },
-   { 'restart', awesome.restart },
-   { 'quit', function() awesome.quit() end },
+-- {{{ Autostart
+smart_run_cmd {
+	command    = 'xdg_menu --format awesome --root-menu /etc/xdg/menus/arch-applications.menu > ' .. config_dir .. '/modules/external/archmenu/init.lua',
+	with_shell = true,
 }
 
-mymainmenu = awful.menu({ items = { { 'awesome', myawesomemenu, beautiful.awesome_icon },
-									{ 'open terminal', terminal }
-								  }
-						})
+local autostart = require('modules.libraries.end-user.autostart')
 
-mylauncher = awful.widget.launcher({ image = beautiful.awesome_icon,
-									 menu = mymainmenu })
+local autostart_commands = {
+    { 'timidity', '-iA' },
+    { 'picom', '--config', config_dir..'config/picom/picom.conf' },
+    { 'pasystray' },
+    { 'xscreensaver', '-no-splash' },
+    { 'unclutter', '-b' },
+    { 'blueman-applet' },
+    { 'lxsession', '--session=awesome', '--de=awesome' },
+    { 'ulauncher', '--hide-window' },
+    { 'playerctld' },
+    { 'kdeconnect-indicator' },
+}
+
+autostart {
+	commands = autostart_commands,
+	rerun   = true,
+	timeout = 5,
+}
+-- }}}
+
+-- Nicer titlebars
+package.path = package.path .. ';' .. awful.util.getdir('config') .. 'modules/external/?.lua'
+package.path = package.path .. ';' .. awful.util.getdir('config') .. 'modules/external/?/init.lua'
+local nice = require('nice')
+nice {
+	titlebar_font   = 'Source Sans Pro bold 12',
+	titlebar_color  = beautiful.titlebar_bg_normal,
+	titlebar_height = beautiful.titlebar_size,
+	close_color     = beautiful.nord11,
+	minimize_color  = beautiful.nord13,
+	maximize_color  = beautiful.nord14,
+	floating_color  = beautiful.nord7,
+	ontop_color     = beautiful.nord8,
+	sticky_color    = beautiful.nord9,
+}
+
+-- Load bling for extra stuff
+local bling = require('bling')
+bling.signal.playerctl.enable()
+
+function music_widget(arg)
+	if not arg then arg = {} end
+	local argv = {
+		bg      = arg.bg      or beautiful.widget_bg or beautiful.bg_normal or beautiful.nord0 or '#2E3440',
+		shape   = arg.shape   or function(cr, w, h) gears.shape.partially_rounded_rect(cr, w, h, false, false, false, true, 16) end,
+		width   = arg.width   or dpi(250),
+		height  = arg.height  or dpi(400),
+		ontop   = arg.ontop   or true,
+		visible = arg.visible or true,
+		type    = arg.type    or 'desktop',
+	}
+
+	music_wibox = {}
+	music_wibox.wibox = wibox {
+		bg      = gears.color.transparent,
+		width   = argv.width,
+		height  = argv.height,
+		ontop   = argv.ontop,
+		visible = argv.visible,
+		type    = argv.type,
+		shape   = argv.shape,
+	}
+
+	music_wibox.widget_coverart = wibox.widget {
+		resize = true,
+		widget = wibox.widget.imagebox,
+	}
+
+	music_wibox.widget_title = wibox.widget {
+		font   = beautiful.font_bold,
+		text   = 'title',
+		align  = 'center',
+		widget = wibox.widget.textbox,
+	}
+
+	music_wibox.widget_artist = wibox.widget {
+		text   = 'artist',
+		align  = 'center',
+		widget = wibox.widget.textbox,
+	}
+
+	music_wibox.widget_progess = wibox.widget {
+		bar_height          = dpi(4),
+		bar_shape           = gears.shape.rounded_rect,
+		bar_color           = beautiful.widget_slider_bar_color        or beautiful.nord10 or '#5E81AC',
+		bar_border_color    = beautiful.widget_slider_bar_border_color or beautiful.nord4  or '#D8DEE9',
+		bar_border_width    = dpi(1),
+		handle_shape        = gears.shape.circle,
+		handle_color        = beautiful.widget_slider_handle_color or beautiful.nord7  or '#8FBCBB',
+		handle_border_color = beautiful.widget_slider_handle_border_color or beautiful.nord4  or '#D8DEE9',
+		handle_border_width = dpi(1),
+		minimum             = 0,
+		maximum             = 100,
+		value               = 0,
+		forced_height       = dpi(30),
+		widget              = wibox.widget.slider,
+	}
+
+	function music_wibox.widget_progess_update(length, position)
+		music_wibox.widget_progess:set_maximum(length)
+		music_wibox.widget_progess:set_value(position)
+	end
+
+	music_wibox.widget_progess_update_timer = gears.timer {
+		timeout   = 0.5,
+		autostart = true,
+		call_now  = true,
+		callback  = function()
+			awful.spawn.easy_async({ 'playerctl', 'metadata', 'mpris:length' }, function(stdout, stderr, reason, exit_code)
+				if not out then return end
+				out = stdout:gsub('\n', '')
+				music_wibox.widget_progess:set_maximum(tonumber(out))
+			end)
+			awful.spawn.easy_async({ 'playerctl', 'metadata', '--format', '{{ position }}' }, function(stdout, stderr, reason, exit_code)
+				if not out then return end
+				out = stdout:gsub('\n', '')
+				music_wibox.widget_progess:set_value(tonumber(out))
+			end)
+		end
+	}
+
+	music_wibox.widget_separator = wibox.widget {
+		orientation   = 'horizontal',
+		span_ratio    = 0.75,
+		thickness     = dpi(2),
+		forced_height = dpi(24),
+		widget        = wibox.widget.separator,
+	}
+
+	music_wibox.wibox.widget = wibox.widget.base.make_widget(wibox.widget {
+		{
+			{
+				nil,
+				{
+					nil,
+					{
+						nil,
+						music_wibox.widget_coverart,
+						nil,
+						layout = wibox.layout.align.horizontal,
+					},
+					nil,
+					layout = wibox.layout.align.horizontal,
+				},
+				{
+					music_wibox.widget_separator,
+					--{
+						music_wibox.widget_title,
+					--	fps           = 60,
+					--	layout        = wibox.container.scroll.horizontal,
+					--	step_function = wibox.container.scroll.linear_increase,
+					--	speed         = 25,
+					--},
+					music_wibox.widget_artist,
+					music_wibox.widget_separator,
+					music_wibox.widget_progess,
+					layout = wibox.layout.fixed.vertical,
+				},
+				layout = wibox.layout.align.vertical,
+			},
+			margins = dpi(10),
+			widget  = wibox.container.margin,
+		},
+		bg      = argv.bg,
+		shape   = argv.shape,
+		widget  = wibox.container.background,
+	})
+
+	awesome.connect_signal('bling::playerctl::title_artist_album', function(title, artist, cover, player)
+		music_wibox.widget_title:set_text(title)
+		music_wibox.widget_artist:set_text(artist)
+
+		local time = os.time(os.date("!*t"))
+		local username = os.getenv('USER')
+		local filepath = ('/tmp/awesome_' .. username .. '/')
+		awful.spawn.with_shell('mkdir "/tmp/awesome_"' .. username)
+		local filename = (filepath .. 'media_cover_' .. time .. '.jpg')
+
+		music_wibox.widget_coverart:set_image(beautiful.icon.note or beautiful.awesome_icon)
+		awful.spawn.with_shell('rm -f ' .. filepath .. '*.jpg')
+		awful.spawn.easy_async_with_shell('ffmpeg -i ' .. cover .. [[ -vf "crop=w='min(min(iw\,ih)\,600)':h='min(min(iw\,ih)\,600)',scale=600:600,setsar=1" -vframes 1 ]] .. filename .. ' > /dev/null; echo now', function()
+			music_wibox.widget_coverart:set_image(filename)
+		end)
+	end)
+
+	return music_wibox.wibox
+end
+
+--[[ local music_wibox = music_widget()
+
+awful.placement.top_right(music_wibox, { margins = { top = 32 } })
+music_wibox.visible = false
+awesome.connect_signal('bling::playerctl::status', function(status)
+	music_wibox.visible = status
+	--notify(tostring(status))
+end) ]]
+
+-- }}}
+
+-- {{{ Menu
+local main_menu = require('modules.widgets.awesome_menu')
+
+local main_menu_launcher = wibox.widget {
+	{
+		{
+			image  = beautiful.awesome_icon,
+			widget = wibox.widget.imagebox,
+		},
+		top    = dpi(6),
+		bottom = dpi(6),
+		left   = dpi(12),
+		right  = dpi(12),
+		widget = wibox.container.margin,
+	},
+	widget = wibox.container.background,
+}
+
+buttonify {
+	widget = main_menu_launcher,
+	button_callback_release = function()
+		main_menu:toggle()
+	end
+}
+--}}}
+
+--[[
+local menu_test = wibox.widget {
+	widget = wibox.widget.base.make_widget,
+}
+
+awful.spawn.with_shell( 'echo "' .. base.untable(wibox.widget) .. '" > /tmp/awesome_launcher.txt' )
 --]]
+--[[
+local test_wibox_1 = wibox {
+	width   = 150,
+	height  = 150,
+	ontop   = true,
+	visible = true,
+	screen  = 'primary',
+}
+
+test_wibox_1.widget = wibox.widget.base.make_widget(
+	--[[ wibox.widget {
+		{
+			{
+				{
+					{
+						{
+							draw = function(_,_,cr,w,h)
+								cr:set_source(gears.color(beautiful.nord11))
+								cr:move_to(0, 0)
+								gears.shape.rounded_bar(cr,w,h)
+								cr:fill()
+							end,
+							widget = wibox.widget.base.make_widget,
+						},
+						forced_width  = dpi(42),
+						forced_height = dpi(8),
+						widget        = wibox.container.constraint,
+					},
+					layout = wibox.layout.fixed.vertical,
+				},
+				layout = wibox.layout.fixed.horizontal,
+			},
+			top    = 8,
+			widget = wibox.container.margin,
+		},
+		{
+			{
+				{
+					{
+						draw = function(_,_,cr,w,h)
+							cr:set_source(gears.color(beautiful.nord12))
+							cr:move_to(0, 0)
+							gears.shape.circle(cr,w,h)
+							cr:fill()
+						end,
+						widget = wibox.widget.base.make_widget,
+					},
+					forced_width  = dpi(24),
+					forced_height = dpi(24),
+					widget        = wibox.container.constraint,
+				},
+				layout = wibox.layout.fixed.vertical,
+			},
+			layout = wibox.layout.fixed.horizontal,
+		},
+		layout = wibox.layout.stack,
+	} --] ]
+	wibox.widget {
+		{
+			{
+				--{
+				--	{
+						min_value     = 0,
+						max_value     = 1,
+						value         = 1,
+						forced_width  = dpi(42),
+						forced_height = dpi(24),
+						paddings      = 1,
+						border_width  = 1,
+						bar_shape     = gears.shape.circle,
+						background_color = gears.color.transparent,
+						widget        = wibox.widget.progressbar,
+				--	},
+				--},
+				--forced_width  = dpi(42),
+				--forced_height = dpi(24),
+				--widget        = wibox.container.constraint,
+			},
+			layout = wibox.layout.fixed.vertical,
+		},
+		layout = wibox.layout.fixed.horizontal,
+	}
+) ]]
 
 -- Menubar configuration
 menubar.utils.terminal = terminal -- Set the terminal for applications that require it
@@ -136,7 +452,7 @@ mytextclock = wibox.widget.textclock()
 
 screen.connect_signal('request::wallpaper', function(s)
 	-- Wallpaper
-	awful.spawn { 'nitrogen', '--restore' }
+	awful.spawn { 'nitrogen', '--restore', '--force-setter=xinerama' }
 	--[[
 	if beautiful.wallpaper then
 		local wallpaper = beautiful.wallpaper
@@ -212,7 +528,7 @@ screen.connect_signal('request::desktop_decoration', function(s)
 		layout = wibox.layout.align.horizontal,
 		{ -- Left widgets
 			layout = wibox.layout.fixed.horizontal,
-			mylauncher,
+			main_menu_launcher,
 			s.mytaglist,
 			s.mypromptbox,
 		},
@@ -230,7 +546,7 @@ end)
 
 -- {{{ Mouse bindings
 awful.mouse.append_global_mousebindings({
-	awful.button({ }, 3, function () mymainmenu:toggle() end),
+	awful.button({ }, 3, function () main_menu:toggle() end),
 	awful.button({ }, 4, awful.tag.viewprev),
 	awful.button({ }, 5, awful.tag.viewnext),
 })
@@ -609,11 +925,12 @@ ruled.client.connect_signal('request::rules', function()
 		},
 		properties = {
 			floating = true,
+			titlebars_enabled = false,
 			border = 0,
 		}
 	}
 
-	--[[
+	--[ [
 	-- Add titlebars to normal clients and dialogs
 	ruled.client.append_rule {
 		id         = 'titlebars',
@@ -634,6 +951,7 @@ end)
 --[ [
 -- {{{ Titlebars
 -- Add a titlebar if titlebars_enabled is set to true in the rules.
+--[[
 client.connect_signal('request::titlebars', function(c)
 	-- buttons for the titlebar
 	local buttons = {
@@ -670,6 +988,7 @@ client.connect_signal('request::titlebars', function(c)
 		layout = wibox.layout.align.horizontal
 	}
 end)
+--]]
 -- }}}
 --]]
 
@@ -690,27 +1009,6 @@ naughty.connect_signal('request::display', function(n)
 end)
 -- }}}
 
--- {{{ Autostart
-local autostart = require('modules.libraries.end-user.autostart')
-
-local autostart_commands = {
-    { 'timidity', '-iA' },
-    { 'picom' },
-    { 'pasystray' },
-    { 'xscreensaver', '-no-splash' },
-    { 'unclutter', '-b' },
-    { 'blueman-applet' },
-    { 'lxsession', '--session=awesome', '--de=awesome' },
-    { 'ulauncher', '--hide-window' },
-}
-
-autostart {
-	commands = autostart_commands,
-	rerun   = true,
-	timeout = 5,
-}
--- }}}
-
 -- Enable sloppy focus, so that focus follows mouse.
 client.connect_signal('mouse::enter', function(c)
 	c:activate { context = 'mouse_enter', raise = false }
@@ -718,108 +1016,27 @@ end)
 
 -------------------------------------------------------------------------------------
 
-local easing = require('modules.libraries.backend.easing')
-
+--[[
 local test_box1 = {}
 test_box1.wibox = wibox {
-	bg      = '#FFFFFF80',
+	bg      = '#202020B0',
 	width   = 50,
 	height  = 50,
+	x       = 960,
+	y       = 540,
 	ontop   = true,
 	visible = true,
 }
-awful.placement.top(test_box1.wibox)
+--awful.placement.top(test_box1.wibox, { margins = { top = 50 } })
+awful.placement.centered(test_box1.wibox)
+--]]
 
-local test_box2 = {}
-test_box2.wibox = wibox {
-	bg      = '#FFFFFF80',
-	width   = 50,
-	height  = 50,
-	ontop   = true,
-	visible = true,
-}
-awful.placement.top(test_box2.wibox, { margins = { left = 200 } })
-
-
-
-local animate = {
-	range = 0
-}
-
-function animate.move(arg)
-	local argv = {
-		fps      = arg.fps    or 60,
-		--start    = arg.start or 0,
-		stop     = arg.stop   or 1080,
-		speed    = arg.speed  or 10,
-		easing   = arg.easing or easing.easeInOutCubic,
-		callback = arg.callback, -- Needs to be defined, because it's just a resource waste otherwise.
-	}
-
-	if animate.range >= 1 then
-		animate.timer:stop()
-	end
-
-	local delta = argv.stop / argv.speed
-
-	animate.range = animate.range + 1 / delta
-
-	arg.callback(argv.easing(animate.range) * delta * argv.speed)
-end
-
-function animate.animate(arg)
-	local argv = {
-		fps      = arg.fps    or 60,
-		--start    = arg.start or 0,
-		stop     = arg.stop   or 1080,
-		speed    = arg.speed  or 10,
-		easing   = arg.easing or easing.easeInOutCubic,
-		callback = arg.callback, -- Needs to be defined, because it's just a resource waste otherwise.
-	}
-
-	local delta_time_speed = argv.speed * (60 / argv.fps) -- At 60 FPS, the speed will be taken as is.
-
-	animate.timer = gears.timer {
-		timeout = (1 / argv.fps),
-		--autostart = true,
-		callback = function()
-			animate.move {
-				stop     = argv.stop,
-				speed    = delta_time_speed,
-				easing   = argv.easing,
-				callback = argv.callback,
-			}
-		end
-	}
-end
-
-function animate:start()
-	self.timer:start()
-end
-
-function animate:stop()
-	self.timer:stop()
-end
-
-function animate:reset()
-	self.range = 0
-end
+--]]
 
 --[[ function animate.animate:restart()
 	self.anim.timer:stop()
 	self.anim.timer:start()
 end ]]
-
-local foo = animate
-foo.animate {
-	fps      = 60,
-	stop     = 108,
-	speed    = 1,
-	easing   = easing.easeInOutCubic,
-	callback = function(y)
-		test_box1.wibox.y = y
-	end,
-}
 
 --[[ local bar = animate.animate {
 	fps      = 30,
@@ -830,30 +1047,29 @@ foo.animate {
 		test_box2.wibox.y = y
 	end,
 } ]]
-
-local temp = false
-gears.timer {
-	timeout = 1,
-	autostart = true,
-	callback = function()
-		temp = not temp
-
-		if temp then
-			foo:start()
-			--bar:start()
-			return
-		end
-	end
-}
+--[[
 
 test_box1.wibox:connect_signal('button::press', function(_,_,_,b)
 	if b == 1 then
-		animate:stop()
-		animate:reset()
+		if animate.running then
+			animate:stop()
+			animate:reset()
+			animate:start()
+		end
+
+		animate.animate {
+			fps      = 60,
+			stop     = 108,
+			speed    = 1,
+			easing   = easing.easeInOutCubic,
+			callback = function(y)
+				test_box1.wibox.y = y + 515
+			end,
+		}
 		animate:start()
 	end
 end)
-
+--]]
 --[[
 local wallpaper_box = {}
 

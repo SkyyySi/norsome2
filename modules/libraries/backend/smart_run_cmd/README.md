@@ -21,8 +21,8 @@ Possible parameters:
  - `strict` (boolean: false): If true, it will only be checked for the exact command (see above).
  - `with_shell` (boolean: false): Whether to use awful.spawn.with_shell or awful.spawn.
  - `rerun` (boolean: false): If true, awesome will continuously check if the command is still running and re-run it if it isn't.
- - `timeout` (number: 5): The amount of seconds awesome should wait between each check.
- - `verbose` (boolean: false):If true, verbose information will be printed through notifications (useful for debugging).
+ - `timeout` (number: 5): The amount of seconds awesome should wait between each check. Requires `rerun` to be true.
+ - `verbose` (boolean: false): If true, verbose information will be printed through notifications (useful for debugging).
 
 ---
 
