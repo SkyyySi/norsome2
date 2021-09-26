@@ -319,6 +319,7 @@
      {"PulseAudio Equalizer", "pulseaudio-equalizer-gtk"},
      {"PulseAudio System Tray", "pasystray", "/usr/share/pixmaps/pasystray.png" },
      {"PulseAudio Volume Control", "pavucontrol-qt"},
+     {"PulseAudio-Lautstärkeregler", "pavucontrol"},
      {"Pure Data", "pd", "/usr/share/icons/hicolor/16x16/apps/pd.png" },
      {"QMidiArp", "qmidiarp "},
      {"QMidiRoute", "qmidiroute"},

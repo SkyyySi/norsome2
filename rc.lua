@@ -103,9 +103,10 @@ local autostart_commands = {
     { 'pasystray' },
     { 'xscreensaver', '-no-splash' },
     { 'unclutter', '-b' },
+    { 'nm-applet' },
     { 'blueman-applet' },
-    { 'lxsession', '--session=awesome', '--de=awesome' },
-    { 'ulauncher', '--hide-window' },
+    { 'lxqt-session', '-w', 'awesome', '--de=awesome' },
+    --{ 'ulauncher', '--hide-window' },
     { 'playerctld' },
     { 'kdeconnect-indicator' },
 }
@@ -321,6 +322,8 @@ buttonify {
 	end
 }
 --}}}
+
+
 
 --[[
 local menu_test = wibox.widget {
