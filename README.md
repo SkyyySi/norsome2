@@ -9,7 +9,7 @@ for the [awesome window manager](https://awesomewm.org/) used by QRLinux (which,
 
 To install, you have to...
 
- - have a system running [Arch Linux](https://archlinux.org/) (or a compatible (distro)[https://en.wikipedia.org/wiki/Linux_distribution], for example [EndeavourOS](https://endeavouros.com/))
+ - have a system running [Arch Linux](https://archlinux.org/) (or a compatible [distro](https://en.wikipedia.org/wiki/Linux_distribution), for example [EndeavourOS](https://endeavouros.com/))
  - have the following packages installed:
    - from the [official repositories](https://archlinux.org/packages/): `alacritty code firefox lxqt pasystray pavucontrol playerctl unclutter xscreensaver`
    - from the [Arch user repository (AUR)](https://aur.archlinux.org/packages/): `awesome-git picom-ibhagwan-git`
