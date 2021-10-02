@@ -4,3 +4,6 @@
 [submodule "modules/external/nice"]
 	path = modules/external/nice
 	url = https://github.com/mut-ex/awesome-wm-nice
+[submodule "modules/external/json.lua"]
+	path = modules/external/json.lua
+	url = https://github.com/rxi/json.lua

@@ -8,7 +8,7 @@ Documentaion should be simple and consise, but still tell you all there is to kn
 
 <br />
 
-## Generel
+## General
 
 In general, you should try to use markup syntax rather than HTML syntax.
 Besides that:
