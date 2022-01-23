@@ -12,6 +12,7 @@
 	],
 	"[markdown]": {
 		"editor.wordWrap": "off"
-	}
+	},
+	"cmake.configureOnOpen": false
 	
 }

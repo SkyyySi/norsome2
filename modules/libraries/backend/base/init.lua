@@ -1,8 +1,8 @@
 #!/usr/bin/env lua
 local gears = require('gears')
 local awful = require('awful')
-
-local base = {}
+local class = require("modules.libraries.backend.class")
+local base = class:new()
 
 function base.round(x)
 	return x>=0 and math.floor(x+0.5) or math.ceil(x-0.5)
@@ -76,4 +76,26 @@ function base.list_wallpapers(callback)
 	})
 end
 
-return base
+function base.clamp_string_length(string, max_length, do_not_append_tripple_period)
+    if #string <= max_length then
+		return string
+    end
+
+	if not do_not_append_tripple_period then
+		max_length = max_length - 3
+	end
+
+	local new_string = ""
+
+	for i = 1, max_length do
+		new_string = new_string .. string:sub(i, i)
+	end
+
+	if not do_not_append_tripple_period then
+		new_string = new_string .. "..."
+	end
+
+	return new_string
+end
+
+return base:new()

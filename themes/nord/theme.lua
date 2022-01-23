@@ -9,7 +9,6 @@ local gears        = require('gears')
 local shape        = gears.shape or require('gears.shape')
 local dpi          = xresources.apply_dpi
 local colors       = require('modules.libraries.backend.colors')
---local themes_path  = gears.filesystem.get_themes_dir()
 
 local theme = {}
 -- The nord color palete is pre-defined here so I don't have to keep looking them up ;)
@@ -121,7 +120,7 @@ theme.systray_icon_size    = dpi(15)
 --theme.taglist_bg_focus = '#ff0000'
 
 -- Generate taglist squares:
-local taglist_square_size = dpi(4)
+local taglist_square_size = dpi(0)
 theme.taglist_squares_sel = theme_assets.taglist_squares_sel(
     taglist_square_size, theme.fg_normal
 )
@@ -249,6 +248,6 @@ theme.icon.microphone = theme_dir .. 'icons/svg/microphone.svg'
 -- from /usr/share/icons and /usr/share/icons/hicolor will be used.
 theme.icon_theme = 'Papirus-Dark-nordic-blue-folders'
 
-return(theme)
+return theme
 
 -- vim: filetype=lua:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:textwidth=80
