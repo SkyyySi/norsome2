@@ -18,6 +18,8 @@ local function buttonify(arg)
 		button_callback_release = arg.button_callback_release or nil,
 	}
 
+	argv.widget:set_bg(argv.button_color_leave)
+
 	local old_cursor, old_wibox
 	argv.widget:connect_signal('mouse::enter', function(c)
 		c:set_bg(argv.button_color_enter)

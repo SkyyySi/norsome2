@@ -20,7 +20,10 @@ require("awful.hotkeys_popup.keys")
 -- Shortcut for sending notifications (primarily for debugging,
 -- you should still use the full syntax for actual use).
 function notify(message)
-	naughty.notification { message = tostring(message) }
+	naughty.notification {
+		message = tostring(message),
+		timeout = 0,
+	}
 end
 
 -- {{{ Error handling
@@ -36,6 +39,7 @@ function raise_error(arg)
 		urgency = "critical",
 		message = argv.message,
 		title   = argv.title,
+		timeout = 0,
 	}
 end
 
@@ -89,10 +93,10 @@ modkey = "Mod4"
 -- }}}
 
 -- {{{ Autostart
-smart_run_cmd {
+--[[ smart_run_cmd {
 	command    = "xdg_menu --format awesome --root-menu /etc/xdg/menus/arch-applications.menu > " .. config_dir .. "/modules/external/archmenu/init.lua",
 	with_shell = true,
-}
+} ]]
 
 local autostart = require("modules.libraries.end-user.autostart")
 
@@ -104,10 +108,11 @@ local autostart_commands = {
 	{ "unclutter", "-b" },
 	{ "nm-applet" },
 	{ "blueman-applet" },
-	--{ "lxqt-session", "-w", "awesome" },
+	{ "lxqt-session", "-w", "awesome" },
 	{ "ulauncher", "--hide-window" },
 	{ "playerctld" },
 	{ "kdeconnect-indicator" },
+	-- { "plank" },
 	--{ "redshift-gtk" },
 }
 
@@ -273,12 +278,12 @@ function music_widget(arg)
 		local time = os.time(os.date("!*t"))
 		local username = os.getenv("USER")
 		local filepath = ("/tmp/awesome_" .. username .. "/")
-		awful.spawn.with_shell("mkdir "/tmp/awesome_"" .. username)
+		awful.spawn.with_shell("mkdir '/tmp/awesome_'" .. username)
 		local filename = (filepath .. "media_cover_" .. time .. ".jpg")
 
 		music_wibox.widget_coverart:set_image(beautiful.icon.note or beautiful.awesome_icon)
 		awful.spawn.with_shell("rm -f " .. filepath .. "*.jpg")
-		awful.spawn.easy_async_with_shell("ffmpeg -i " .. cover .. [[ -vf "crop=w="min(min(iw\,ih)\,600)":h="min(min(iw\,ih)\,600)",scale=600:600,setsar=1" -vframes 1 ]] .. filename .. " > /dev/null; echo now", function()
+		awful.spawn.easy_async_with_shell("ffmpeg -i " .. cover .. [[ -vf "crop=w='min(min(iw\,ih)\,600)':h='min(min(iw\,ih)\,600)',scale=600:600,setsar=1" -vframes 1 ]] .. filename .. " > /dev/null; echo now", function()
 			music_wibox.widget_coverart:set_image(filename)
 		end)
 	end)
@@ -300,7 +305,7 @@ end) ]]
 -- {{{ Menu
 local main_menu = require("modules.widgets.awesome_menu")
 
-local main_menu_launcher = wibox.widget {
+main_menu_launcher = wibox.widget {
 	{
 		{
 			image  = beautiful.awesome_icon,
@@ -450,9 +455,6 @@ end)
 -- Keyboard map indicator and switcher
 mykeyboardlayout = awful.widget.keyboardlayout()
 
--- Create a textclock widget
-mytextclock = wibox.widget.textclock()
-
 --screen.connect_signal("request::wallpaper", function(s)
 	-- Wallpaper
 	--awful.spawn { "nitrogen", "--restore", "--force-setter=xinerama" }
@@ -468,8 +470,108 @@ mytextclock = wibox.widget.textclock()
 	--]]
 --end)
 
--- Broken, doesn"t work
+-- Broken, doesn't work
 --pulseaudio.notification.mute:enable()
+
+
+
+
+
+
+
+
+
+
+
+local function toggle_button_widget()
+	local components = {}
+
+	components.progressbar_widget = wibox.widget {
+		min_value     = 0,
+		max_value     = 1,
+		value         = 0,
+		clip          = true,
+		color         = "#000000",
+		shape         = gears.shape.circle,
+		bar_shape     = gears.shape.rounded_bar,
+		forced_height = dpi(20),
+		forced_width  = dpi(200),
+		widget        = wibox.widget.progressbar,
+	}
+
+	function components.get() --> boolean
+		if components.progressbar_widget:get_value() ~= 0 then
+			return true
+		end
+
+		return false
+	end
+
+	function components.set(new_status)
+		if new_status or new_status == true or new_status == 1 then
+			components.progressbar_widget:set_value(1)
+		end
+
+		components.progressbar_widget:set_value(0)
+	end
+
+	function components.toggle()
+		components.progressbar_widget:set_value(components.progressbar_widget:get_value() * -1 + 1)
+	end
+
+	local widget = wibox.widget {
+		nil,
+		{
+			{
+				components.progressbar_widget,
+				layout = wibox.layout.fixed.horizontal,
+			},
+			layout = wibox.layout.fixed.vertical,
+		},
+		nil,
+		expand  = "outside",
+		layout  = wibox.layout.align.vertical,
+		buttons = {
+			awful.button({}, 1, function() components.toggle() end),
+		},
+	}
+
+	return widget
+end
+
+
+
+
+
+
+local function fading_button()
+	local components = {}
+
+	components.widget = wibox.widget {
+		{
+			markup = [[<span foreground="#000000"><b>   TEST   </b></span>]],
+			widget = wibox.widget.textbox,
+		},
+		bg                 = "#FFFFFF",
+		shape_border_width = dpi(1),
+		shape_border_color = "#FF0000",
+		widget             = wibox.container.background,
+	}
+
+	--buttonify { widget = components.widget }
+
+	local widget = wibox.widget {
+		widget = components.widget,
+	}
+
+	return widget
+end
+
+local animation = require("modules.libraries.backend.animation")
+
+
+
+
 
 screen.connect_signal("request::desktop_decoration", function(s)
 	-- Each screen has its own tag table.
@@ -478,10 +580,81 @@ screen.connect_signal("request::desktop_decoration", function(s)
 	-- Create a table that holds the widgets of the current screen
 	s.widgets = {}
 
+	--[[
+		Some other possible, "fun" functions  you could use here include:
+		- sin:     function(x) return math.sin(x) end
+		- choppy:  function(x) return math.floor(x*10)/10 end
+		- swapped: function(x) if x > 0.5 then return x - 0.5 else return x + 0.5 end end
+	--]]
+	s.widgets.fading_button = fading_button()
+	s.widgets.fading_button_invert = -1
+	s.widgets.fading_button_animation = animation {
+		step   = 0.01,
+		stop   = 1,
+		easing = function(x) if x > 0.5 then return x - 0.5 else return x + 0.5 end end,
+		loop   = "forward-backward",
+		callback = function(t)
+			s.widgets.fading_button:set_opacity(-t + 1)
+			s.widgets.fading_button:set_bg(s.widgets.fading_button:get_bg())
+		end,
+	}
+
+	--if s == screen.primary then
+	--	notify(string.format("Screen %s is primary", s))
+	--end
+
+	s.media_info_card_wibox = wibox {
+		width        = 280,
+		height       = 150,
+		visible      = false,
+		ontop        = true,
+		bg           = beautiful.nord1 .. "B0",
+		shape        = gears.shape.rounded_rect,
+		border_width = dpi(1),
+		border_color = beautiful.nord1,
+		screen       = s,
+		widget       = wibox.widget {
+			{
+				playercontrol.widget.info_card(),
+				margins = dpi(10),
+				widget  = wibox.container.margin,
+			},
+			shape              = gears.shape.rounded_rect,
+			shape_border_width = dpi(1),
+			shape_border_color = beautiful.nord4,
+			widget             = wibox.container.background,
+		}
+	}
+
+	-- Create a textclock widget
+	function s.widgets.textclock(args)
+		if not args then args = {} end
+		args = {
+			format  = args.format or "%d.%m.%Y, %H:%M:%S",
+			margins = {
+				top    = 0,
+				bottom = 0,
+				left   = dpi(4),
+				right  = dpi(4),
+			},
+		}
+
+		local widget = wibox.widget {
+			{
+				format = args.format,
+				widget = wibox.widget.textclock,
+			},
+			margins = args.margins,
+			widget  = wibox.container.margin,
+		}
+
+		return widget
+	end
+
 	-- Create a promptbox for each screen
 	s.widgets.promptbox = awful.widget.prompt()
 
-	-- Create an imagebox widget which will contain an icon indicating which layout we"re using.
+	-- Create an imagebox widget which will contain an icon indicating which layout we're using.
 	-- We need one layoutbox per screen.
 	s.widgets.layoutbox = awful.widget.layoutbox {
 		screen  = s,
@@ -666,6 +839,88 @@ screen.connect_signal("request::desktop_decoration", function(s)
 		widget           = wibox.widget.progressbar,
 	}
 
+	local function place_drawable_at_button(d, args)
+		args = {
+			margins = args.margins or {}
+		}
+
+		local button_x   = mouse.current_widget_geometry.x
+		local button_y   = mouse.current_widget_geometry.y
+		local button_w   = mouse.current_widget_geometry.width
+		local button_h   = mouse.current_widget_geometry.height
+		local screen_x   = s.geometry.x
+		local screen_y   = s.geometry.y
+		local drawable_w = d.width
+		local drawable_h = d.height
+
+		awful.placement.align(d, {
+			position = "top",
+			honor_workarea = true,
+			margins = args.margins,
+		})
+		d.x = button_x + screen_x + button_w / 2 - drawable_w / 2
+	end
+
+	local function link_button_to_drawable(button, drawable, args)
+		button:connect_signal("button::press", function(_,_,_,b)
+			if b == 1 then
+				if drawable.visible then
+					drawable.visible = false
+					return
+				end
+
+				if not args then args = {} end
+				args.honor_workarea = true
+				awful.placement.align(drawable, args)
+
+				drawable.x = mouse.current_widget_geometry.x + s.geometry.x + mouse.current_widget_geometry.width / 2 - drawable.width / 2
+				drawable.visible = not drawable.visible
+			end
+		end)
+	end
+
+	link_button_to_drawable(s.widgets.song_info_widget_progress_bar, s.media_info_card_wibox, {
+		position = "top",
+		margins = {
+			top = 10,
+		},
+	})
+
+	--[[
+	s.widgets.song_info_widget_progress_bar:connect_signal("button::press", function(_,_,_,button)
+		if button == 1 then
+			if s.media_info_card_wibox.visible then
+				s.media_info_card_wibox.visible = false
+				return
+			end
+
+			awful.placement.align(s.media_info_card_wibox, {
+				position = "top",
+				honor_workarea = true,
+				margins = {
+					top = 10,
+				},
+			})
+
+			s.media_info_card_wibox.x = mouse.current_widget_geometry.x + s.geometry.x + mouse.current_widget_geometry.width / 2 - s.media_info_card_wibox.width / 2
+			s.media_info_card_wibox.visible = not s.media_info_card_wibox.visible
+			--[[
+			local button_x = mouse.current_widget_geometry.x
+			local button_y = mouse.current_widget_geometry.y
+			local button_w = mouse.current_widget_geometry.width
+			local button_h = mouse.current_widget_geometry.height
+			local screen_x = s.geometry.x
+			local screen_y = s.geometry.y
+			local popup_w  = s.media_info_card_wibox.width
+			local popup_h  = s.media_info_card_wibox.height
+
+			s.media_info_card_wibox.x = button_x + screen_x + button_w / 2 - popup_w / 2
+			s.media_info_card_wibox.y = button_y + screen_y + button_h + 10
+			--] ]
+		end
+	end)
+	--]]
+
 	awesome.connect_signal("playerctl::metadata::position", function(position)
 		s.widgets.song_info_widget_progress_bar:set_value(position)
 	end)
@@ -707,7 +962,13 @@ screen.connect_signal("request::desktop_decoration", function(s)
 
 	s.widgets.cpu_graph = cpu_usage.graph()
 
+	s.widgets.sidebar_button = require("modules.widgets.sidebar")(s)
+
 	-- Create the wibars
+	--local gen_top_wibar = require("modules.widgets.segmented_wibar")
+	--s.widgets.top_wibar = gen_top_wibar(s)
+
+	--[ [
 	s.widgets.top_wibar = awful.wibar {
 		position = "top",
 		screen = s,
@@ -723,17 +984,23 @@ screen.connect_signal("request::desktop_decoration", function(s)
 			{ -- Right widgets
 				s.widgets.cpu_graph,
 				s.widgets.song_info_widget,
+				s.widgets.fading_button,
 				s.widgets.volume_slider_widget,
 				pulseaudio.widget.volume_label(),
 				mykeyboardlayout,
-				wibox.widget.systray(),
-				mytextclock,
+				--wibox.widget.systray(),
+				s.widgets.textclock {},
+				s.widgets.sidebar_button,
 				layout = wibox.layout.fixed.horizontal,
 				--s.widgets.layoutbox,
 			},
 		}
 	}
+	--]]
 
+	s.widgets.left_wibar = require("modules.widgets.sideways_wibar")(s)
+
+	--[[
 	s.widgets.left_wibar = awful.wibar {
 		position = "left",
 		screen = s,
@@ -753,6 +1020,7 @@ screen.connect_signal("request::desktop_decoration", function(s)
 			layout = wibox.layout.align.vertical,
 		}
 	}
+	--]]
 end)
 -- }}}
 
@@ -1144,6 +1412,19 @@ ruled.client.connect_signal("request::rules", function()
 		}
 	}
 
+	ruled.client.append_rule {
+		id = "dock",
+		rule_any = {
+			class = {
+				"Plank",
+			},
+		},
+		properties = {
+			above = true,
+			ontop = true,
+		},
+	}
+
 	--[ [
 	-- Add titlebars to normal clients and dialogs
 	ruled.client.append_rule {
@@ -1247,12 +1528,15 @@ awful.placement.centered(test_box1.wibox)
 
 --]]
 
---[[ function animate.animate:restart()
+--[[
+function animate.animate:restart()
 	self.anim.timer:stop()
 	self.anim.timer:start()
-end ]]
+end
+--]]
 
---[[ local bar = animate.animate {
+--[[
+local bar = animate.animate {
 	fps      = 30,
 	stop     = 108,
 	speed    = 1,
@@ -1260,7 +1544,8 @@ end ]]
 	callback = function(y)
 		test_box2.wibox.y = y
 	end,
-} ]]
+}
+--]]
 --[[
 
 test_box1.wibox:connect_signal("button::press", function(_,_,_,b)

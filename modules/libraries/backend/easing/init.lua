@@ -2,7 +2,7 @@
 --[[ Define some commonly used math objects to simpler variables
 to make the code look a little cleaner (and to allow copy-pasting)
 from https://easings.net *cough* ]]
-local PI   = math.pi
+local pi   = math.pi
 local sin  = math.sin
 local cos  = math.cos
 local tan  = math.tan
@@ -29,15 +29,15 @@ end
 
 --[[ Sine easings ]]
 function easing.easeInSine(x)
-	return 1 - cos((x * PI) / 2)
+	return 1 - cos((x * pi) / 2)
 end
 
 function easing.easeOutSine(x)
-	return sin((x * PI) / 2)
+	return sin((x * pi) / 2)
 end
 
 function easing.easeInOutSine(x)
-	return -(cos(PI * x) - 1) / 2
+	return -(cos(pi * x) - 1) / 2
 end
 
 --------------------------------------------------------------------
@@ -196,7 +196,7 @@ end
 
 --[[ Elastic easings ]]
 function easing.easeInElastic(x)
-	local c4 = (2 * PI) / 3
+	local c4 = (2 * pi) / 3
 
 	if     x == 0 then return 0
 	elseif x == 1 then return 1
@@ -205,7 +205,7 @@ function easing.easeInElastic(x)
 end
 
 function easing.easeOutElastic(x)
-	local c4 = (2 * PI) / 3
+	local c4 = (2 * pi) / 3
 
 	if     x == 0 then return 0
 	elseif x == 1 then return 1
@@ -215,7 +215,7 @@ function easing.easeOutElastic(x)
 end
 
 function easing.easeInOutElastic(x)
-	local c5 = (2 * PI) / 4.5
+	local c5 = (2 * pi) / 4.5
 
 	if     x == 0 then return 0
 	elseif x == 1 then return 1

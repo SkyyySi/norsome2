@@ -32,4 +32,4 @@ Further reading:
 
 ---
 
-This document is released into the public domain under the [Creative Commons Zero (CC0) license](https://creativecommons.org/publicdomain/zero/1.0/) license
+This document is released into the public domain under the [Creative Commons Zero (CC0) license](https://creativecommons.org/publicdomain/zero/1.0/) license.
